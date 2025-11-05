@@ -1,4 +1,5 @@
 import os
+import glob
 
 # 项目根目录
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -10,11 +11,55 @@ DATA_DIR = os.path.join(ROOT_DIR, "documents")
 INDEX_DIR = os.path.join(ROOT_DIR, "vector_db")
 INDEX_FILE = os.path.join(INDEX_DIR, "faiss_index.bin")
 
-# 文档路径
-FILE_PATHS = [
-    # 在此添加更多的文档路径
-    # os.path.join(DATA_DIR, "***.txt"),
-]
+# 支持的文档文件格式
+SUPPORTED_EXTENSIONS = ['.txt', '.md', '.pdf', '.doc', '.docx']
+
+def get_all_document_files(data_dir=DATA_DIR, extensions=None, recursive=True):
+    """
+    自动扫描数据目录中的所有文档文件
+    
+    Args:
+        data_dir (str): 文档目录路径
+        extensions (list): 支持的文件扩展名列表，默认为 SUPPORTED_EXTENSIONS
+        recursive (bool): 是否递归扫描子目录，默认为 True
+    
+    Returns:
+        list: 找到的所有文档文件路径列表
+    """
+    if extensions is None:
+        extensions = SUPPORTED_EXTENSIONS
+    
+    file_paths = []
+    
+    # 确保目录存在
+    if not os.path.exists(data_dir):
+        print(f"警告: 文档目录不存在: {data_dir}")
+        return file_paths
+    
+    # 根据是否递归扫描，选择不同的匹配模式
+    if recursive:
+        # 递归扫描所有子目录
+        for ext in extensions:
+            pattern = os.path.join(data_dir, '**', f'*{ext}')
+            file_paths.extend(glob.glob(pattern, recursive=True))
+    else:
+        # 只扫描当前目录
+        for ext in extensions:
+            pattern = os.path.join(data_dir, f'*{ext}')
+            file_paths.extend(glob.glob(pattern))
+    
+    # 去重并排序
+    file_paths = sorted(list(set(file_paths)))
+    
+    return file_paths
+
+# 文档路径 - 自动扫描 documents 目录
+FILE_PATHS = get_all_document_files()
+
+# 如果需要手动指定特定文件，可以取消下面的注释并添加路径
+# FILE_PATHS = [
+#     os.path.join(DATA_DIR, "your_file.txt"),
+# ]
 
 # 文本分割参数
 # 增加chunk_size可以保留更多上下文，提高精确查询的准确性

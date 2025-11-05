@@ -3,3 +3,4 @@ src/__pycache__/
 *.DS_Store
 documents/
 vector_db/
+talk.md
